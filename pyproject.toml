@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.10", "pybind11>=2.12"]
+requires = ["scikit-build-core>=0.10", "pybind11>=2.13"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -31,7 +31,7 @@ dev = ["pytest>=7"]
 # Build backend + transitive build tools. Required when installing with
 # `--no-build-isolation` (faster incremental rebuilds during C++ development).
 # Mirror the [build-system].requires list above.
-build = ["scikit-build-core>=0.10", "pybind11>=2.12", "cmake>=3.28"]
+build = ["scikit-build-core>=0.10", "pybind11>=2.13", "cmake>=3.28"]
 bench = ["pytest>=7", "pytest-benchmark>=4", "openexr>=3"]
 parity = ["pytest>=7", "openexr>=3"]
 cov = ["pytest>=7", "pytest-cov>=4"]
@@ -83,7 +83,9 @@ line-length = 100
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "PT", "C4"]
 
 [tool.cibuildwheel]
-build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
+build = "cp310-* cp311-* cp312-* cp313-* cp313t-* cp314-* cp314t-*"
+# Free-threaded CPython wheels; the module declares py::mod_gil_not_used().
+enable = ["cpython-freethreading"]
 skip = "*-musllinux_* *-win32 *-manylinux_i686"
 test-requires = ["pytest", "numpy"]
 test-command = "pytest {project}/tests -k 'not parity_ctlrender and not parallel_speedup and not interrupt'"

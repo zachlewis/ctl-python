@@ -63,4 +63,14 @@ if(CTL_BUILD_TOOLS AND TARGET ctlrender)
     endif()
 endif()
 
+# Vendored CTL SDK: the headers and static libs the extension itself links,
+# shipped inside the package (numpy/pybind11-style) so downstream C++ code
+# can build against the wheel. Discover via ctl.get_include()/ctl.get_lib().
+foreach(_ctl_sdk_lib IlmCtl IlmCtlSimd IlmCtlMath)
+    install(FILES $<TARGET_FILE:${_ctl_sdk_lib}> DESTINATION ctl/lib COMPONENT python)
+    install(DIRECTORY ${ctl_SOURCE_DIR}/lib/${_ctl_sdk_lib}/
+            DESTINATION ctl/include/CTL COMPONENT python
+            FILES_MATCHING PATTERN "*.h")
+endforeach()
+
 install(TARGETS _ctl_native LIBRARY DESTINATION ctl COMPONENT python)

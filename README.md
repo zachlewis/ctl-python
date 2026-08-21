@@ -75,13 +75,16 @@ against any build of libIlmCtl that exposes those symbols.
   and macOS only; Windows is exercised by the wheel build pipeline on tag
   pushes (vcpkg-managed Imath/OpenEXR).
 - Python 3.10 or newer. CI verifies 3.10, 3.11, 3.12, 3.13, and 3.14 on
-  Linux and macOS.
+  Linux and macOS. Free-threaded CPython (3.13t/3.14t) is supported; the
+  extension declares `py::mod_gil_not_used()` and wheels are built for it.
 - CMake 3.28+ and a C++17 compiler when building from source (pip installs
   fetch a CMake wheel automatically when the system one is too old).
 - CTL itself, fetched and statically vendored into the wheel via CMake
   `FetchContent` against `aces-aswf/CTL@ctl-1.5.5`. Developer builds may
   point at a local CTL checkout via
-  `-Ccmake.define.FETCHCONTENT_SOURCE_DIR_CTL=/path/to/CTL`.
+  `-Ccmake.define.FETCHCONTENT_SOURCE_DIR_CTL=/path/to/CTL`. The wheel also
+  ships the vendored CTL headers and static libraries for downstream C++
+  builds — locate them with `ctl.get_include()` / `ctl.get_lib()`.
 - Imath and OpenEXR (CTL transitive deps). Provided automatically by the
   wheel; from-source builds need the platform dev packages
   (`libopenexr-dev` / `libimath-dev` on Debian/Ubuntu, `openexr` / `imath`

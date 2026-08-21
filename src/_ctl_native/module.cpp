@@ -8,9 +8,11 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_ctl_native, m) {
+// mod_gil_not_used: safe to run without the GIL on free-threaded CPython.
+// Shared state is the InterpCache (internally locked); CTL FunctionCalls are
+// per-thread and tiling.cpp guards its own error channel.
+PYBIND11_MODULE(_ctl_native, m, py::mod_gil_not_used()) {
     m.doc() = "ctl-python native bindings";
-    m.attr("__version__") = "0.1.0";
 
     py::register_exception<ctlpython::ParseError>(m, "_NativeParseError", PyExc_RuntimeError);
     py::register_exception<ctlpython::RuntimeErr>(m, "_NativeRuntimeErr", PyExc_RuntimeError);

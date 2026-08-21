@@ -81,10 +81,11 @@ std::vector<std::string> InterpCache::env_paths() {
 }
 
 void InterpCache::set_module_paths(std::vector<std::string> paths) {
+    std::lock_guard<std::mutex> lock(mu_);
     user_paths_ = std::move(paths);
 }
 
-Ctl::SimdInterpreter& InterpCache::get_or_load(const std::string& path) {
+std::shared_ptr<Ctl::SimdInterpreter> InterpCache::get_or_load(const std::string& path) {
     std::string abs;
     try {
         abs = std::filesystem::absolute(path).string();
@@ -99,6 +100,10 @@ Ctl::SimdInterpreter& InterpCache::get_or_load(const std::string& path) {
         throw ParseError(std::string("CTL file not found: ") + e.what());
     }
 
+    // ponytail: one lock over lookup+load serializes cold-cache compiles of
+    // distinct files too; per-entry locks if that ever measurably matters.
+    std::lock_guard<std::mutex> lock(mu_);
+
     auto it = map_.find(abs);
     if (it != map_.end() && it->second.main_mtime == main_mt) {
         // Also verify all transitively imported files are unchanged.
@@ -111,7 +116,7 @@ Ctl::SimdInterpreter& InterpCache::get_or_load(const std::string& path) {
                 break;
             }
         }
-        if (!stale) return *it->second.interp;
+        if (!stale) return it->second.interp;
     }
     map_.erase(abs);
 
@@ -124,7 +129,7 @@ Ctl::SimdInterpreter& InterpCache::get_or_load(const std::string& path) {
     Ctl::Interpreter::setModulePaths(combined);
 
     auto entry = CachedInterp{
-        std::make_unique<Ctl::SimdInterpreter>(),
+        std::make_shared<Ctl::SimdInterpreter>(),
         main_mt,
         {},   // imports — populated below
         abs
@@ -163,10 +168,11 @@ Ctl::SimdInterpreter& InterpCache::get_or_load(const std::string& path) {
     }
 
     auto [iter, _] = map_.emplace(abs, std::move(entry));
-    return *iter->second.interp;
+    return iter->second.interp;
 }
 
 pybind11::list InterpCache::info() const {
+    std::lock_guard<std::mutex> lock(mu_);
     pybind11::list out;
     for (const auto& [_, e] : map_) {
         pybind11::dict d;
@@ -180,7 +186,10 @@ pybind11::list InterpCache::info() const {
     return out;
 }
 
-void InterpCache::clear() { map_.clear(); }
+void InterpCache::clear() {
+    std::lock_guard<std::mutex> lock(mu_);
+    map_.clear();
+}
 
 }
 

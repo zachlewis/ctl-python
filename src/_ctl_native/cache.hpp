@@ -4,6 +4,7 @@
 #include <pybind11/pybind11.h>
 #include <CtlSimdInterpreter.h>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <chrono>
@@ -12,7 +13,10 @@
 namespace ctlpython {
 
 struct CachedInterp {
-    std::unique_ptr<Ctl::SimdInterpreter> interp;
+    // shared_ptr: an in-flight apply() keeps its interpreter alive even if a
+    // concurrent reload/cache_clear() evicts the entry (apply releases the
+    // GIL, and free-threaded builds have no GIL to serialize on at all).
+    std::shared_ptr<Ctl::SimdInterpreter> interp;
     std::chrono::nanoseconds main_mtime;
     // List of (absolute_path, mtime) for all transitively imported .ctl files.
     // Any mtime change invalidates this cache entry. The import list is internal;
@@ -24,11 +28,14 @@ struct CachedInterp {
 class InterpCache {
 public:
     static InterpCache& instance();
-    Ctl::SimdInterpreter& get_or_load(const std::string& path);
+    std::shared_ptr<Ctl::SimdInterpreter> get_or_load(const std::string& path);
     pybind11::list info() const;
     void clear();
     void set_module_paths(std::vector<std::string> paths);
 private:
+    // Guards map_ and user_paths_ (and the setModulePaths+loadFile pair,
+    // which flows through a CTL-global). Required for free-threaded CPython.
+    mutable std::mutex mu_;
     std::unordered_map<std::string, CachedInterp> map_;
     std::vector<std::string> user_paths_;
     static std::vector<std::string> env_paths();

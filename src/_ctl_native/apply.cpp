@@ -58,13 +58,15 @@ static py::array_t<float> apply_impl(
 
     for (const auto& path : transforms) {
         try {
-            auto& interp = ctlpython::InterpCache::instance().get_or_load(path);
+            // shared_ptr keeps the interpreter alive across the GIL-released
+            // region below even if another thread evicts the cache entry.
+            auto interp = ctlpython::InterpCache::instance().get_or_load(path);
 
             // Validation pass on the main thread, surfacing structural errors
             // and uniform/varying requirement failures before any worker is
             // spawned. The same FunctionCall feeds extract_varying_overrides;
             // workers will allocate their own.
-            auto setup_fn = interp.newFunctionCall("main");
+            auto setup_fn = interp->newFunctionCall("main");
             if (setup_fn->numInputArgs() < 3 || setup_fn->numOutputArgs() < 3) {
                 throw RuntimeErr(
                     "CTL main() must have at least 3 input and 3 output "
@@ -80,7 +82,7 @@ static py::array_t<float> apply_impl(
             {
                 py::gil_scoped_release release;
                 ctlpython::run_parallel_transform(
-                    interp, planes.numSamples,
+                    *interp, planes.numSamples,
                     planes.r.data(), planes.g.data(), planes.b.data(),
                     rOut.data(), gOut.data(), bOut.data(),
                     scalar_overrides, varying_overrides, alpha_default

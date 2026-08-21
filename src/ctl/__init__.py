@@ -1,6 +1,8 @@
 """ctl-python — native Python bindings for CTL (Color Transformation Language)."""
 from __future__ import annotations
 
+import os
+
 __version__ = "0.1.0"
 
 from ctl import _ctl_native as _native  # noqa: F401
@@ -20,6 +22,22 @@ __all__ = [
     "apply",
     "cache_clear",
     "cache_info",
+    "get_include",
+    "get_lib",
     "set_module_paths",
     "signature",
 ]
+
+
+def get_include() -> str:
+    """Directory of the vendored CTL headers (``#include <CtlSimdInterpreter.h>``).
+
+    Present in wheel installs only; editable builds serve headers from the
+    CTL source tree instead. Linking also needs Imath/OpenEXR dev packages.
+    """
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "include", "CTL")
+
+
+def get_lib() -> str:
+    """Directory of the vendored CTL static libraries (IlmCtl, IlmCtlSimd, IlmCtlMath)."""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib")
