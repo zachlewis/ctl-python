@@ -20,8 +20,12 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(FindOrFetchCTL)
 
-set(PYBIND11_FINDPYTHON ON)
-find_package(pybind11 CONFIG REQUIRED)
+# SKBUILD_SABI_COMPONENT is "Development.SABIModule" when scikit-build-core
+# is building an abi3 wheel (wheel.py-api), and empty otherwise — including
+# free-threaded builds, which have no stable ABI.
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module
+                                        ${SKBUILD_SABI_COMPONENT})
+find_package(nanobind CONFIG REQUIRED)
 
 set(NATIVE_SRC
     src/_ctl_native/module.cpp
@@ -34,7 +38,12 @@ set(NATIVE_SRC
     src/_ctl_native/interrupt.cpp
 )
 
-pybind11_add_module(_ctl_native MODULE ${NATIVE_SRC})
+if(SKBUILD_SABI_COMPONENT)
+    set(_nb_sabi STABLE_ABI)
+endif()
+# FREE_THREADED marks the module GIL-free on free-threaded CPython (no-op
+# elsewhere); STABLE_ABI produces an abi3 module when skbuild asks for one.
+nanobind_add_module(_ctl_native NB_STATIC FREE_THREADED ${_nb_sabi} ${NATIVE_SRC})
 
 target_link_libraries(_ctl_native PRIVATE
     CTL::IlmCtlSimd CTL::IlmCtlMath CTL::IlmCtl

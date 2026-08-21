@@ -92,6 +92,8 @@ def apply(
     """
     a = np.asarray(input)
     n3, kind, shape, dtype = _coerce_input(a)
+    # The native layer requires C-contiguous float32; no-op when already so.
+    n3 = np.ascontiguousarray(n3)
     paths = _coerce_transforms(transforms)
     try:
         raw = _ctl_native.apply(n3, paths, params, default_alpha)

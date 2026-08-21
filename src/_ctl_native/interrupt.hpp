@@ -5,7 +5,7 @@
 namespace ctlpython {
 
 // Acquire the GIL briefly and check for pending Python signals (e.g. SIGINT).
-// If a signal is pending, throws pybind11::error_already_set() — pybind11 will
+// If a signal is pending, throws nanobind::python_error() — nanobind will
 // then propagate the underlying Python exception (e.g. KeyboardInterrupt)
 // back across the C++ → Python boundary.
 //

@@ -6,8 +6,10 @@
 #include "exceptions.hpp"
 #include "overrides.hpp"
 #include "tiling.hpp"
-#include <pybind11/stl.h>
-#include <pybind11/numpy.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 #include <CtlSimdInterpreter.h>
 #include <CtlFunctionCall.h>
 #include <Iex.h>
@@ -17,18 +19,18 @@
 #include <algorithm>
 #include <optional>
 
-namespace py = pybind11;
+namespace nb = nanobind;
 using namespace ctlpython;
 
-static py::array_t<float> apply_impl(
-    py::array_t<float, py::array::c_style | py::array::forcecast> input,
+static nb::ndarray<nb::numpy, float, nb::ndim<2>> apply_impl(
+    InputArray input,
     const std::vector<std::string>& transforms,
-    const py::dict& params,
-    py::object default_alpha
+    const nb::dict& params,
+    nb::object default_alpha
 ) {
     std::optional<float> alpha_default;
     if (!default_alpha.is_none()) {
-        alpha_default = py::cast<float>(default_alpha);
+        alpha_default = nb::cast<float>(default_alpha);
     }
 
     if (transforms.empty()) throw ParameterError("transforms list is empty");
@@ -36,18 +38,18 @@ static py::array_t<float> apply_impl(
     // Convert py::dict -> ScalarValue map once (path-independent).
     std::unordered_map<std::string, ScalarValue> scalar_overrides;
     for (auto item : params) {
-        std::string name = py::cast<std::string>(item.first);
-        py::handle v = item.second;
+        std::string name = nb::cast<std::string>(item.first);
+        nb::handle v = item.second;
         ScalarValue sv;
-        if (py::isinstance<py::bool_>(v)) {
+        if (nb::isinstance<nb::bool_>(v)) {
             sv.tag = ScalarValue::B;
-            sv.b   = py::cast<bool>(v);
-        } else if (py::isinstance<py::int_>(v)) {
+            sv.b   = nb::cast<bool>(v);
+        } else if (nb::isinstance<nb::int_>(v)) {
             sv.tag = ScalarValue::I;
-            sv.i   = py::cast<long long>(v);
-        } else if (py::isinstance<py::float_>(v)) {
+            sv.i   = nb::cast<long long>(v);
+        } else if (nb::isinstance<nb::float_>(v)) {
             sv.tag = ScalarValue::F;
-            sv.f   = py::cast<double>(v);
+            sv.f   = nb::cast<double>(v);
         } else {
             throw ParameterError("override '" + name + "' must be int, float, or bool");
         }
@@ -80,7 +82,7 @@ static py::array_t<float> apply_impl(
             std::vector<float> rOut(planes.numSamples), gOut(planes.numSamples), bOut(planes.numSamples);
 
             {
-                py::gil_scoped_release release;
+                nb::gil_scoped_release release;
                 ctlpython::run_parallel_transform(
                     *interp, planes.numSamples,
                     planes.r.data(), planes.g.data(), planes.b.data(),
@@ -100,8 +102,8 @@ static py::array_t<float> apply_impl(
     return planes_to_n3(planes);
 }
 
-void register_apply(pybind11::module_& m) {
+void register_apply(nb::module_& m) {
     m.def("apply", &apply_impl,
-          py::arg("input"), py::arg("transforms"), py::arg("params"),
-          py::arg("default_alpha") = py::float_(1.0));
+          nb::arg("input"), nb::arg("transforms"), nb::arg("params"),
+          nb::arg("default_alpha").none() = 1.0);
 }

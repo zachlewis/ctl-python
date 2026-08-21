@@ -8,7 +8,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Native Python bindings for [CTL](https://github.com/aces-aswf/CTL) (the
-Color Transformation Language). A pybind11 extension applies CTL transforms
+Color Transformation Language). A nanobind extension applies CTL transforms
 to NumPy arrays in-process via `libIlmCtl` / `libIlmCtlSimd`, with
 persistent interpreter caching across calls.
 
@@ -18,7 +18,7 @@ The common alternative for applying CTL from Python is shelling out to the
 `ctlrender` binary with an EXR round-trip. That works, but most of the
 wall-clock there goes to subprocess spawn, EXR encode/decode, and per-call
 CTL module parsing rather than color math. Calling `libIlmCtl` in-process
-from a pybind11 extension skips all of those.
+from a nanobind extension skips all of those.
 
 Measured end-to-end on M-series Mac (16 cores) running `scale2x.ctl`, warm
 cache:
@@ -76,7 +76,7 @@ against any build of libIlmCtl that exposes those symbols.
   pushes (vcpkg-managed Imath/OpenEXR).
 - Python 3.10 or newer. CI verifies 3.10, 3.11, 3.12, 3.13, and 3.14 on
   Linux and macOS. Free-threaded CPython (3.13t/3.14t) is supported; the
-  extension declares `py::mod_gil_not_used()` and wheels are built for it.
+  extension is built GIL-free and wheels are published for it.
 - CMake 3.28+ and a C++17 compiler when building from source (pip installs
   fetch a CMake wheel automatically when the system one is too old).
 - CTL itself, fetched and statically vendored into the wheel via CMake
@@ -317,8 +317,8 @@ ctl-python/
 |   |   |-- _signature.py        CtlSignature / CtlParam dataclasses
 |   |   |-- _cache.py            cache_info / cache_clear / set_module_paths
 |   |   `-- _errors.py           CtlError hierarchy
-|   `-- _ctl_native/             pybind11 extension source
-|       |-- module.cpp           PYBIND11_MODULE entry
+|   `-- _ctl_native/             nanobind extension source
+|       |-- module.cpp           NB_MODULE entry
 |       |-- apply.cpp            Per-transform compute orchestration
 |       |-- signature.cpp        main() introspection
 |       |-- cache.cpp            Interpreter cache + import tracking
@@ -343,7 +343,7 @@ Apache License 2.0; see [`LICENSE`](LICENSE). Each source file carries an
 
 Third-party components retain their own licenses: CTL (the library this
 extension links against) is Apache 2.0; Imath and OpenEXR are
-BSD-3-Clause; pybind11 is BSD-3-Clause.
+BSD-3-Clause; nanobind is BSD-3-Clause.
 
 ## Copyright
 

@@ -3,7 +3,7 @@
 #include "tiling.hpp"
 #include "interrupt.hpp"
 #include "exceptions.hpp"
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <Iex.h>
 #include <atomic>
 #include <thread>
@@ -88,7 +88,7 @@ void run_parallel_transform(
                 // briefly re-acquire the GIL to check for pending signals.
                 // Spawned workers (widx > 0) never touch Python.
                 if (widx == 0) {
-                    ctlpython::check_interrupt();  // throws pybind11::error_already_set on Ctrl+C
+                    ctlpython::check_interrupt();  // throws nanobind::python_error on Ctrl+C
                 }
             }
         } catch (...) {
@@ -115,7 +115,7 @@ void run_parallel_transform(
     if (first_exception) {
         try {
             std::rethrow_exception(first_exception);
-        } catch (pybind11::error_already_set&) {
+        } catch (nanobind::python_error&) {
             throw;  // preserve KeyboardInterrupt / any Python exception
         } catch (const Iex::BaseExc& e) {
             throw RuntimeErr(std::string("CTL: ") + e.what());

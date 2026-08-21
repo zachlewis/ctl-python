@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Alex Forsythe, Academy of Motion Picture Arts and Sciences
 #pragma once
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
 #include <CtlSimdInterpreter.h>
 #include <memory>
 #include <mutex>
@@ -29,7 +29,7 @@ class InterpCache {
 public:
     static InterpCache& instance();
     std::shared_ptr<Ctl::SimdInterpreter> get_or_load(const std::string& path);
-    pybind11::list info() const;
+    nanobind::list info() const;
     void clear();
     void set_module_paths(std::vector<std::string> paths);
 private:
@@ -43,4 +43,4 @@ private:
 
 }
 
-void register_cache(pybind11::module_& m);
+void register_cache(nanobind::module_& m);

@@ -2,7 +2,8 @@
 // Copyright (c) 2026 Alex Forsythe, Academy of Motion Picture Arts and Sciences
 #include "cache.hpp"
 #include "exceptions.hpp"
-#include <pybind11/stl.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 #include <CtlInterpreter.h>
 #include <Iex.h>
 #include <filesystem>
@@ -171,11 +172,11 @@ std::shared_ptr<Ctl::SimdInterpreter> InterpCache::get_or_load(const std::string
     return iter->second.interp;
 }
 
-pybind11::list InterpCache::info() const {
+nanobind::list InterpCache::info() const {
     std::lock_guard<std::mutex> lock(mu_);
-    pybind11::list out;
+    nanobind::list out;
     for (const auto& [_, e] : map_) {
-        pybind11::dict d;
+        nanobind::dict d;
         d["path"] = e.path;
         // mtime_ns is the file_time_type epoch on the host platform (Unix
         // epoch on macOS/Linux, FILETIME epoch on Windows). Treat as opaque;
@@ -193,7 +194,7 @@ void InterpCache::clear() {
 
 }
 
-void register_cache(pybind11::module_& m) {
+void register_cache(nanobind::module_& m) {
     m.def("cache_info", []{ return ctlpython::InterpCache::instance().info(); });
     m.def("cache_clear", []{ ctlpython::InterpCache::instance().clear(); });
     m.def("set_module_paths", [](const std::vector<std::string>& paths) {

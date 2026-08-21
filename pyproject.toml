@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.10", "pybind11>=2.13"]
+requires = ["scikit-build-core>=0.10", "nanobind>=2.7"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -31,7 +31,7 @@ dev = ["pytest>=7"]
 # Build backend + transitive build tools. Required when installing with
 # `--no-build-isolation` (faster incremental rebuilds during C++ development).
 # Mirror the [build-system].requires list above.
-build = ["scikit-build-core>=0.10", "pybind11>=2.13", "cmake>=3.28"]
+build = ["scikit-build-core>=0.10", "nanobind>=2.7", "cmake>=3.28"]
 bench = ["pytest>=7", "pytest-benchmark>=4", "openexr>=3"]
 parity = ["pytest>=7", "openexr>=3"]
 cov = ["pytest>=7", "pytest-cov>=4"]
@@ -53,6 +53,13 @@ install.components = ["python"]
 [tool.scikit-build.metadata.version]
 provider = "scikit_build_core.metadata.regex"
 input = "src/ctl/__init__.py"
+
+# Stable ABI: one cp312-abi3 wheel covers CPython >=3.12 (GIL builds).
+# 3.10/3.11 get per-version wheels; free-threaded builds have no stable ABI
+# and scikit-build-core falls back to regular tags for them automatically.
+[[tool.scikit-build.overrides]]
+if.python-version = ">=3.12"
+wheel.py-api = "cp312"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -83,8 +90,10 @@ line-length = 100
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "PT", "C4"]
 
 [tool.cibuildwheel]
-build = "cp310-* cp311-* cp312-* cp313-* cp313t-* cp314-* cp314t-*"
-# Free-threaded CPython wheels; the module declares py::mod_gil_not_used().
+# cp312 produces the abi3 wheel that serves 3.12/3.13/3.14+; building
+# cp313/cp314 too would just rebuild the identical abi3 wheel. Free-threaded
+# interpreters (cp313t/cp314t) have no stable ABI and build per-version.
+build = "cp310-* cp311-* cp312-* cp313t-* cp314t-*"
 enable = ["cpython-freethreading"]
 skip = "*-musllinux_* *-win32 *-manylinux_i686"
 test-requires = ["pytest", "numpy"]

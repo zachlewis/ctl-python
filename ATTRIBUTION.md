@@ -13,4 +13,4 @@ after a fetch-mode build.
 The architecture (process-scoped interpreter cache with mtime invalidation,
 parameter override priority, tile-parallel compute, error mapping) is ported
 from the matlab-ctl MEX (https://github.com/aforsythe/matlab-ctl). The C++ MEX
-implementation served as the design reference for this pybind11 binding.
+implementation served as the design reference for this binding.

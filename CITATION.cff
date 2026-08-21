@@ -4,7 +4,7 @@ type: software
 title: ctl-python
 abstract: >-
   Native Python bindings for the CTL (Color Transformation Language)
-  interpreter. Provides a pybind11 extension that calls libIlmCtl
+  interpreter. Provides a nanobind extension that calls libIlmCtl
   in-process, so applying CTL transforms to NumPy arrays no longer
   requires shelling out to a subprocess or moving data through
   intermediate EXR files. Caches loaded interpreters across calls and
@@ -21,7 +21,7 @@ keywords:
   - Color Transformation Language
   - ACES
   - Python
-  - pybind11
+  - nanobind
 license: Apache-2.0
 version: 0.1.0
 date-released: 2026-04-27
