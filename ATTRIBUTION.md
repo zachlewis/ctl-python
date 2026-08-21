@@ -8,6 +8,13 @@ reference implementation maintained by AMPAS / aces-aswf
 under Apache-2.0. Full license text included in `build/_deps/ctl-src/LICENSE`
 after a fetch-mode build.
 
+## Native dependency fallback
+
+When installed packages are unavailable, the CMake build may fetch and
+statically link Imath, OpenEXR, and (via OpenEXR) libdeflate from their
+upstream repositories. These projects retain their own licenses:
+Imath and OpenEXR are BSD-3-Clause; libdeflate is MIT.
+
 ## matlab-ctl
 
 The architecture (process-scoped interpreter cache with mtime invalidation,

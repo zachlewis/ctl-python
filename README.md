@@ -86,9 +86,11 @@ against any build of libIlmCtl that exposes those symbols.
   ships the vendored CTL headers and static libraries for downstream C++
   builds — locate them with `ctl.get_include()` / `ctl.get_lib()`.
 - Imath and OpenEXR (CTL transitive deps). Provided automatically by the
-  wheel; from-source builds need the platform dev packages
-  (`libopenexr-dev` / `libimath-dev` on Debian/Ubuntu, `openexr` / `imath`
-  on Homebrew, `vcpkg install openexr imath` on Windows).
+  wheel. From-source builds prefer installed packages (`libopenexr-dev` /
+  `libimath-dev` on Debian/Ubuntu, `openexr` / `imath` on Homebrew,
+  `vcpkg install openexr imath` on Windows) and fall back to building
+  pinned static copies in-tree; force the fully hermetic path with
+  `-Ccmake.define.FETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER`.
 
 ## Quick Start
 
@@ -343,7 +345,8 @@ Apache License 2.0; see [`LICENSE`](LICENSE). Each source file carries an
 
 Third-party components retain their own licenses: CTL (the library this
 extension links against) is Apache 2.0; Imath and OpenEXR are
-BSD-3-Clause; nanobind is BSD-3-Clause.
+BSD-3-Clause; libdeflate (fetched by OpenEXR when building hermetically) is
+MIT; nanobind is BSD-3-Clause.
 
 ## Copyright
 
